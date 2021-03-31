@@ -40,6 +40,14 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return $this->pwd;
     }
+    
+    public static function index() {
+        if (auth()->user()->isYeltechAdmin()) {
+            return User::all();
+        } else {
+            return User::where('groupId', auth()->user()->groupId)->get();
+        }
+    }
 
     public function group() {
         return $this->belongsTo(Group::class, 'groupId', 'groupId');
