@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\JWTAuth;
 
 class AuthController extends Controller
@@ -17,10 +16,9 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials['email'] = $request->email;
-        $credentials['password'] = $request->pwd;
+        $credentials = $request->only('email', 'password');
 
-        if (empty($credentials['email']) OR empty($credentials['password'])) {
+        if (empty($credentials['email']) || empty($credentials['password'])) {
             return response()->json([
                 'error' => 'You must fill in all fields'
             ], 401);
@@ -31,10 +29,17 @@ class AuthController extends Controller
                 'error' => 'You must enter a valid email'
             ], 401);
         }
-
+        
         if (! $token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
+
+        // Find app access indicator
+        if (auth()->user()->hasAppAccess() != 1) {
+            return response()->json([
+                'error' => 'Your group does not have access to the app'
+            ], 401);
+         }
 
         return $this->respondWithToken($token);
     }

@@ -15,10 +15,10 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
 {
     use Authenticatable, Authorizable, HasFactory;
-
+    
     protected $primaryKey = 'userId';
 
-    /**
+     /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -26,12 +26,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $fillable = [
         'name', 'email',
     ];
-
-    public function getAuthPassword()
-    {
-        return $this->pwd;
-    }
-
+    
     /**
      * The attributes excluded from the model's JSON form.
      *
@@ -40,6 +35,48 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     protected $hidden = [
         'pwd', 'createdAt', 'updatedAt', 'createdBy'
     ];
+    
+    public function getAuthPassword()
+    {
+        return $this->pwd;
+    }
+
+    public function group() {
+        return $this->belongsTo(Group::class, 'groupId', 'groupId');
+    }
+
+    public function isSuperAdmin() {
+        if ( $this->roleId == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isYeltechAdmin() {
+        if ( $this->roleId == 1 || $this->roleId == 2) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isGroupAdmin() {
+        if ( $this->roleId == 1 || $this->roleId == 2 || $this->roleId == 3) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function hasAppAccess() {
+        return $this->group->appAccess;
+        if ( $this->group->appAccess == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
