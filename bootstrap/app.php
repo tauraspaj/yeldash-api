@@ -78,6 +78,7 @@ $app->configure('auth');
 
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
+    'deviceMiddleware' => App\Http\Middleware\DeviceMiddleware::class,
 ]);
 
 /*
