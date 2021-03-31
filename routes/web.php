@@ -17,9 +17,16 @@ $router->get('/', function () use ($router) {
     //root
 });
 
-$router->group(['middleware' => 'auth'], function () use ($router) {
-    $router->get('users', 'UserController@index');
-});
+$router->group(['prefix' => 'api'], function () use ($router) {
+    $router->post('user/auth', 'AuthController@login');
 
-$router->post('user/auth', 'AuthController@login');
-$router->post('user/logout', 'AuthController@logout');
+    $router->group(['middleware' => 'auth'], function () use ($router) {
+        $router->post('user/logout', 'AuthController@logout');
+        
+        $router->get('devices/summary', 'DeviceController@deviceList');
+        
+        $router->group(['middleware' => 'deviceMiddleware'], function () use ($router) {
+            $router->get('devices/{deviceId}', 'DeviceController@show');
+        });
+    });
+});
