@@ -45,7 +45,6 @@ class DeviceController extends Controller
             // Channel data
             // $result['channels'][$i] = $channel;
 
-            date_default_timezone_set('Europe/London');
             // Measurements log for each channel for the last 3 hours
             $now = date('Y-m-d H:i:s', time());
             $hours3 = date('Y-m-d H:i:s', time() - 3*60*60);
