@@ -17,6 +17,8 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use Authenticatable, Authorizable, HasFactory;
     
     protected $primaryKey = 'userId';
+    const UPDATED_AT = 'updatedAt';
+    const CREATED_AT = 'createdAt';
 
      /**
      * The attributes that are mass assignable.
@@ -24,7 +26,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $fillable = [
-        'name', 'email',
+        'name', 'email', 'phoneNumber', 'pwd', 'sendingId', 'updatedAt'
     ];
     
     /**
@@ -33,7 +35,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $hidden = [
-        'pwd', 'createdAt', 'updatedAt', 'createdBy'
+        'pwd', 'createdAt', 'updatedAt', 'createdBy', 'groupId', 'roleId', 'userId'
     ];
     
     public function getAuthPassword()
