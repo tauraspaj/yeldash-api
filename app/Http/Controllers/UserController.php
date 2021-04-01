@@ -76,6 +76,9 @@ class UserController extends Controller
     }
 
     public function create(Request $request) {
+        if ( !auth()->user()->isGroupAdmin() )
+            return response()->json(['message' => 'Unauthorized'], 401);
+
         // ! Find how to set role id
         $this->validate($request, [
             'fullName' => 'required|string',
