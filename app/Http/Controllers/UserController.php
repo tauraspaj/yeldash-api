@@ -56,8 +56,6 @@ class UserController extends Controller
         $user->phoneNumber = $request['phoneNumber'];
         $user->pwd = app('hash')->make($request['pwd']);
 
-        $user->save();
-
         // Update user
         if ( $user->save() ) {
             $status = 200;
@@ -68,7 +66,7 @@ class UserController extends Controller
         } else {
             $status = 500;
             $output = [
-                'message' => 'An error occured while up[dating user'
+                'message' => 'An error occured while updating user'
             ];
         }
 
