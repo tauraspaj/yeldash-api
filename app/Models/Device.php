@@ -15,6 +15,7 @@ class Device extends Model implements AuthenticatableContract, AuthorizableContr
     use Authenticatable, Authorizable, HasFactory;
 
     protected $primaryKey = 'deviceId';
+    const UPDATED_AT = 'updatedAt';
 
     /**
      * The attributes that are mass assignable.

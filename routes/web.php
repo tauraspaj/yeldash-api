@@ -33,6 +33,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         
         $router->group(['middleware' => 'deviceMiddleware'], function () use ($router) {
             $router->get('devices/{deviceId}', 'DeviceController@show');
+            $router->put('devices/{deviceId}/customise', 'DeviceController@updateCustomise');
         });
     });
 });

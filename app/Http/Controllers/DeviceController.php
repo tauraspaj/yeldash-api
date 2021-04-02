@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Device;
 use App\Models\User;
 use DB;
@@ -88,5 +89,28 @@ class DeviceController extends Controller
         $result['alarmHistory'] = $first->union($second)->union($third)->orderBy('timestampCol', 'DESC')->take(10)->get();
 
         return response()->json($result, 200);
+    }
+
+    public function updateCustomise($deviceId, Request $request) {
+        $device = Device::find($deviceId);
+
+        $device->deviceAlias = $request['deviceAlias'];
+        $device->customLocation = $request['customLocation'];
+
+        // Update device
+        if ( $device->save() ) {
+            $status = 200;
+            $output = [
+                'user' => $device,
+                'message' => 'Device updated successfully'
+            ];
+        } else {
+            $status = 500;
+            $output = [
+                'message' => 'An error occured while updating device'
+            ];
+        }
+
+        return response()->json($output, $status);
     }
 }
