@@ -35,6 +35,8 @@ class DeviceController extends Controller
 
         // Device data
         $result['deviceData'] = $device;
+        $result['deviceData']['latitude'] = '63.446114';
+        $result['deviceData']['longitude'] = '10.899592';
         // Subscription data
         $result['subscription'] = DB::table('subscriptions')->where('deviceId', $device->deviceId)->select('subStart', 'subFinish')->get();
 
@@ -43,34 +45,73 @@ class DeviceController extends Controller
         
         $i = 0;
         foreach ($channels as $channel) {
+            $result['channels'][$i]['chart']['labels'] = array();
+            $result['channels'][$i]['chart']['dataset'] = array();
             // Channel data
-            // $result['channels'][$i] = $channel;
+            // $result['channels'][$i]['channelData'] = $channel;
 
-            // Measurements log for each channel for the last 3 hours
-            $now = date('Y-m-d H:i:s', time());
-            $hours3 = date('Y-m-d H:i:s', time() - 3*60*60);
+            // Last 10 measurements log
             $result['channels'][$i]['measurements'] = DB::table('measurements')
                                                     ->select('measurements.measurement', 'measurements.measurementTime', 'channels.channelName', 'units.unitName as unit')
-                                                    ->whereBetween('measurements.measurementTime', [$hours3, $now])
+                                                    // ->whereBetween('measurements.measurementTime', [$hours3, $now])
                                                     ->where('measurements.channelId', $channel->channelId)
                                                     ->leftJoin('channels', 'measurements.channelId', '=', 'channels.channelId')
                                                     ->leftJoin('units', 'channels.unitId', '=', 'units.unitId')
                                                     ->orderBy('measurements.measurementTime', 'DESC')
+                                                    ->limit(10)
                                                     ->get();
+
+            // Generate chart display [labels] and [dataset]
+            // Data from the last 3 hours and limited to 8 readings
+            $now = date('Y-m-d H:i:s', time());
+            $hours3 = date('Y-m-d H:i:s', time() - 4000*3*60*60);
+            $chart = DB::table('measurements')
+                        ->select('measurements.measurement', 'measurements.measurementTime', 'channels.channelName', 'units.unitName as unit')
+                        ->whereBetween('measurements.measurementTime', [$hours3, $now])
+                        ->where('measurements.channelId', $channel->channelId)
+                        ->leftJoin('channels', 'measurements.channelId', '=', 'channels.channelId')
+                        ->leftJoin('units', 'channels.unitId', '=', 'units.unitId')
+                        ->orderBy('measurements.measurementTime', 'DESC')
+                        ->limit(8)
+                        ->get();
+            // $result['channels'][$i]['chart'] = $chart;
+
+            for ($j = 0; $j < count($chart); $j++) {
+                // $result['channels'][$i]['chart'][$j]['labels'] = $chart[$j]->measurement;
+                array_push($result['channels'][$i]['chart']['labels'], substr($chart[$j]->measurementTime, 11, -3));
+                array_push($result['channels'][$i]['chart']['dataset'], $chart[$j]->measurement);
+            }
+            // foreach ($chart as $row) {
+                // array_push($result['channels'][$i]['chart']['labels'], $row);
+            // }
             $i++;
         }
 
+
         // Get alarm triggers
-        $result['alarmTriggers'] = $device->alarmTriggers()->select('triggerId', 'operator', 'thresholdValue', 'isTriggered')->get();
+        $result['alarmTriggers'] = $device->alarmTriggers()
+                                            ->select('alarmTriggers.triggerId', 'alarmTriggers.operator', 'alarmTriggers.thresholdValue', 'alarmTriggers.isTriggered', 'channels.channelName')
+                                            ->leftJoin('channels', 'alarmTriggers.channelId', '=', 'channels.channelId')
+                                            ->get();
 
         // Get group users
-        $result['groupUsers'] = User::where('groupId', $device->groupId)->select('userId', 'fullName', 'email')->get();
+        $groupUsers = User::where('groupId', $device->groupId)->select('userId', 'fullName', 'email')->get();
         
         // Get assigned alarm recipients
-        $result['alarmRecipients'] = $device->alarmRecipients();
+        $alarmRecipients = $device->alarmRecipients();
+
+        foreach ($groupUsers as $groupUser) {
+            $groupUser['isRecipient'] = 0;
+            foreach ($alarmRecipients as $recipient) {
+                if ($recipient->userId == $groupUser->userId) {
+                    $groupUser['isRecipient'] = 1;
+                }
+            }
+        }
+        $result['deviceRecipients'] = $groupUsers;
 
         $first = DB::table('smsAlarms')
-                    ->select('channels.channelName AS channelName', 'smsAlarms.smsAlarmHeader AS col1', 'smsAlarms.smsAlarmReading AS col2', DB::raw('"SYSTEM" AS clearedBy'), 'smsAlarms.smsAlarmTime AS timestampCol')
+                    ->select('channels.channelName AS channelName', 'smsAlarms.smsAlarmHeader AS msg1', 'smsAlarms.smsAlarmReading AS msg2', DB::raw('"SYSTEM" AS clearedBy'), 'smsAlarms.smsAlarmTime AS timestampCol')
                     ->leftJoin('channels', 'smsAlarms.channelId', '=', 'channels.channelId')
                     ->where('smsAlarms.deviceId', $device->deviceId);
                     
@@ -86,9 +127,51 @@ class DeviceController extends Controller
                     ->where('smsStatus.deviceId', $device->deviceId);
                     
 
-        $result['alarmHistory'] = $first->union($second)->union($third)->orderBy('timestampCol', 'DESC')->take(10)->get();
+        $result['alarmHistory'] = $first->union($second)->union($third)->orderBy('timestampCol', 'DESC')->limit(10)->get();
 
         return response()->json($result, 200);
+    }
+
+    public function toggleRecipient($deviceId, Request $request) {
+        $device = Device::find($deviceId);
+
+        $userId = $request->userId;
+        $newRecipientState = $request->newRecipientState;
+
+        $oldRecipientState = $device->alarmRecipients()->where('userId', $userId)->count();
+
+        if ($newRecipientState == 0 && $oldRecipientState == 1) {
+            if ( DB::table('alarmRecipients')->where('userId', $userId)->delete() ) {
+                $status = 200;
+                $output = [
+                    'message' => 'User recipient state changed'
+                ];
+            } else {
+                $status = 400;
+                $output = [
+                    'message' => 'Something went wrong'
+                ];
+            }
+        } else if ($newRecipientState == 1 && $oldRecipientState == 0) {
+            if ( DB::table('alarmRecipients')->insert([['deviceId' => $device->deviceId, 'userId' => $userId]]) ) {
+                $status = 200;
+                $output = [
+                    'message' => 'User recipient state changed'
+                ];
+            } else {
+                $status = 400;
+                $output = [
+                    'message' => 'Something went wrong'
+                ];
+            }
+        } else {
+            $status = 200;
+            $output = [
+                'message' => 'No change in recipient state detected'
+            ];
+        }
+
+        return response()->json($output, $status);
     }
 
     public function updateCustomise($deviceId, Request $request) {

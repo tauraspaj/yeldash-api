@@ -23,15 +23,16 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->post('user/logout', 'AuthController@logout');
     
     $router->get('users', 'UserController@index');
-    $router->get('user/myProfile', 'UserController@myProfile');
-    $router->post('user/update', 'UserController@update');
-    $router->post('users', 'UserController@create');
+    // $router->get('user/myProfile', 'UserController@myProfile');
+    // $router->post('user/update', 'UserController@update');
+    // $router->post('users', 'UserController@create');
     // $router->delete('users/{userId}', 'UserController@index');
 
     $router->get('devices/summary', 'DeviceController@deviceList');
     
     $router->group(['middleware' => 'deviceMiddleware'], function () use ($router) {
         $router->get('devices/{deviceId}', 'DeviceController@show');
-        $router->put('devices/{deviceId}/customise', 'DeviceController@updateCustomise');
+        $router->put('devices/{deviceId}/toggleRecipient', 'DeviceController@toggleRecipient');
+        // $router->put('devices/{deviceId}/customise', 'DeviceController@updateCustomise');
     });
 });
