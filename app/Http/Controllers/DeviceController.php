@@ -46,7 +46,7 @@ class DeviceController extends Controller
         $i = 0;
         foreach ($channels as $channel) {
             $result['channels'][$i]['chart']['labels'] = array();
-            $result['channels'][$i]['chart']['dataset'] = array();
+            $measurementArr = array();
             // Channel data
             // $result['channels'][$i]['channelData'] = $channel;
 
@@ -74,16 +74,15 @@ class DeviceController extends Controller
                         ->orderBy('measurements.measurementTime', 'DESC')
                         ->limit(8)
                         ->get();
-            // $result['channels'][$i]['chart'] = $chart;
 
             for ($j = 0; $j < count($chart); $j++) {
-                // $result['channels'][$i]['chart'][$j]['labels'] = $chart[$j]->measurement;
                 array_push($result['channels'][$i]['chart']['labels'], substr($chart[$j]->measurementTime, 11, -3));
-                array_push($result['channels'][$i]['chart']['dataset'], $chart[$j]->measurement);
+                array_push($measurementArr, $chart[$j]->measurement);
             }
-            // foreach ($chart as $row) {
-                // array_push($result['channels'][$i]['chart']['labels'], $row);
-            // }
+            // Convert measurements array from string to float
+            $measurementArr = array_map('floatval', $measurementArr);
+            $result['channels'][$i]['chart']['dataset'] = $measurementArr;
+
             $i++;
         }
 
@@ -141,7 +140,7 @@ class DeviceController extends Controller
         $oldRecipientState = $device->alarmRecipients()->where('userId', $userId)->count();
 
         if ($newRecipientState == 0 && $oldRecipientState == 1) {
-            if ( DB::table('alarmRecipients')->where('userId', $userId)->delete() ) {
+            if ( DB::table('alarmRecipients')->where('userId', $userId)->where('deviceId', $device->deviceId)->delete() ) {
                 $status = 200;
                 $output = [
                     'message' => 'User recipient state changed'

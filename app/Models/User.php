@@ -35,7 +35,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $hidden = [
-        'pwd', 'createdAt', 'updatedAt', 'createdBy', 'groupId', 'roleId', 'userId'
+        'pwd', 'createdAt', 'updatedAt', 'createdBy', 'groupId', 'roleId'
     ];
     
     public function getAuthPassword()
