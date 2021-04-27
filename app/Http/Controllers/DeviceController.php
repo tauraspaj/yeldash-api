@@ -35,8 +35,7 @@ class DeviceController extends Controller
 
         // Device data
         $result['deviceData'] = $device;
-        $result['deviceData']['latitude'] = '63.446114';
-        $result['deviceData']['longitude'] = '10.899592';
+
         // Subscription data
         $result['subscription'] = DB::table('subscriptions')->where('deviceId', $device->deviceId)->select('subStart', 'subFinish')->get();
 
@@ -110,19 +109,19 @@ class DeviceController extends Controller
         $result['deviceRecipients'] = $groupUsers;
 
         $first = DB::table('smsAlarms')
-                    ->select('channels.channelName AS channelName', 'smsAlarms.smsAlarmHeader AS msg1', 'smsAlarms.smsAlarmReading AS msg2', DB::raw('"SYSTEM" AS clearedBy'), 'smsAlarms.smsAlarmTime AS timestampCol')
+                    ->select('channels.channelName AS channelName', 'smsAlarms.smsAlarmHeader AS msg1', 'smsAlarms.smsAlarmReading AS msg2', DB::raw('NULL AS unit'), 'smsAlarms.smsAlarmTime AS timestampCol')
                     ->leftJoin('channels', 'smsAlarms.channelId', '=', 'channels.channelId')
                     ->where('smsAlarms.deviceId', $device->deviceId);
                     
         $second = DB::table('triggeredAlarmsHistory')
-                    ->select('channels.channelName AS channelName', 'alarmTriggers.operator', 'alarmTriggers.thresholdValue', 'users.fullName as clearedBy', 'triggeredAlarmsHistory.clearedAt')
+                    ->select('channels.channelName AS channelName', 'alarmTriggers.operator AS msg1', 'alarmTriggers.thresholdValue AS msg2', 'units.unitName AS unit', 'triggeredAlarmsHistory.clearedAt AS timestampCol')
                     ->leftJoin('alarmTriggers', 'triggeredAlarmsHistory.triggerId', '=', 'alarmTriggers.triggerId')
                     ->leftJoin('channels', 'alarmTriggers.channelId', '=', 'channels.channelId')
-                    ->leftJoin('users', 'triggeredAlarmsHistory.clearedBy', '=', 'users.userId')
+                    ->leftJoin('units', 'channels.unitId', '=', 'units.unitId')
                     ->where('alarmTriggers.deviceId', $device->deviceId);
                     
         $third = DB::table('smsStatus')
-                    ->select(DB::raw('"Device" AS channelName'), 'smsStatus.smsStatus', DB::raw('NULL AS col2'), DB::raw('"SYSTEM" AS clearedBy'), 'smsStatus.smsStatusTime AS timestampCol')
+                    ->select(DB::raw('"Device" AS channelName'), 'smsStatus.smsStatus AS msg1', DB::raw('NULL AS msg22'), DB::raw('NULL AS unit'), 'smsStatus.smsStatusTime AS timestampCol')
                     ->where('smsStatus.deviceId', $device->deviceId);
                     
 
