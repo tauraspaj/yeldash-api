@@ -75,8 +75,8 @@ class DeviceController extends Controller
                         ->get();
 
             for ($j = 0; $j < count($chart); $j++) {
-                array_push($result['channels'][$i]['chart']['labels'], substr($chart[$j]->measurementTime, 11, -3));
-                array_push($measurementArr, $chart[$j]->measurement);
+                array_unshift($result['channels'][$i]['chart']['labels'], substr($chart[$j]->measurementTime, 11, -3));
+                array_unshift($measurementArr, $chart[$j]->measurement);
             }
             // Convert measurements array from string to float
             $measurementArr = array_map('floatval', $measurementArr);
@@ -88,8 +88,9 @@ class DeviceController extends Controller
 
         // Get alarm triggers
         $result['alarmTriggers'] = $device->alarmTriggers()
-                                            ->select('alarmTriggers.triggerId', 'alarmTriggers.operator', 'alarmTriggers.thresholdValue', 'alarmTriggers.isTriggered', 'channels.channelName')
+                                            ->select('alarmTriggers.triggerId', 'alarmTriggers.operator', 'alarmTriggers.thresholdValue', 'alarmTriggers.isTriggered', 'channels.channelName', 'units.unitName AS unit')
                                             ->leftJoin('channels', 'alarmTriggers.channelId', '=', 'channels.channelId')
+                                            ->leftJoin('units', 'channels.unitId', '=', 'units.unitId')
                                             ->get();
 
         // Get group users
