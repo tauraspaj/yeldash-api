@@ -62,8 +62,8 @@ class DeviceController extends Controller
 
             // Generate chart display [labels] and [dataset]
             // Data from the last 3 hours and limited to 8 readings
-            $now = date('Y-m-d H:i:s', time());
-            $hours3 = date('Y-m-d H:i:s', time() - 4000*3*60*60);
+            $now = date('Y-m-d H:i:s', time() + 60*60);
+            $hours3 = date('Y-m-d H:i:s', time() - 3*60*60);
             $chart = DB::table('measurements')
                         ->select('measurements.measurement', 'measurements.measurementTime', 'channels.channelName', 'units.unitName as unit')
                         ->whereBetween('measurements.measurementTime', [$hours3, $now])
