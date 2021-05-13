@@ -33,6 +33,7 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->group(['middleware' => 'deviceMiddleware'], function () use ($router) {
         $router->get('devices/{deviceId}', 'DeviceController@show');
         $router->put('devices/{deviceId}/toggleRecipient', 'DeviceController@toggleRecipient');
-        // $router->put('devices/{deviceId}/customise', 'DeviceController@updateCustomise');
+
+        $router->post('devices/{deviceId}/customise', 'DeviceController@customiseDevice');
     });
 });

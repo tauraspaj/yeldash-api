@@ -170,17 +170,51 @@ class DeviceController extends Controller
         return response()->json($output, $status);
     }
 
-    public function updateCustomise($deviceId, Request $request) {
+    public function customiseDevice($deviceId, Request $request) {
         $device = Device::find($deviceId);
 
-        $device->deviceAlias = $request['deviceAlias'];
-        $device->customLocation = $request['customLocation'];
+        $deviceAlias = $request['deviceAlias'];
+        $customLocation = $request['customLocation'];
+        $latitude = $request['latitude'];
+        $longitude = $request['longitude'];
+
+        if ($deviceAlias == '') { $deviceAlias = null; }
+		if ($customLocation == '') { $customLocation = null; }
+
+        if ($latitude == '' || $longitude == '') {
+			$latitude = null;
+			$longitude = null;
+		} else {
+			if (preg_match('/^[0-9.-]+$/', $latitude) && preg_match('/^[0-9.-]+$/', $longitude)) {
+				$latitude = floatval($latitude);
+				$longitude = floatval($longitude);
+
+				if ( $latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180 ) {
+					$status = 422;
+                    $output = [
+                        'message' => 'Invalid coordinates have been entered'
+                    ];
+                    return response()->json($output, $status);
+				}
+			} else {
+                $status = 422;
+                $output = [
+                    'message' => 'Invalid coordinates have been entered'
+                ];
+                return response()->json($output, $status);
+			}
+		}
+
+        $device->deviceAlias = $deviceAlias;
+        $device->customLocation = $customLocation;
+        $device->latitude = $latitude;
+        $device->longitude = $longitude;
 
         // Update device
         if ( $device->save() ) {
             $status = 200;
             $output = [
-                'user' => $device,
+                'device' => $device,
                 'message' => 'Device updated successfully'
             ];
         } else {
