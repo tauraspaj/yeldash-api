@@ -41,7 +41,7 @@ class AuthController extends Controller
             ], 401);
          }
 
-        return $this->respondWithToken($token);
+        return $this->respondWithToken($token, auth()->user()->roleId);
     }
 
     /**
@@ -63,10 +63,11 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function respondWithToken($token)
+    protected function respondWithToken($token, $roleId)
     {
         return response()->json([
-            'access_token' => $token
+            'access_token' => $token,
+            'roleId' => $roleId
         ]);
     }
 }
