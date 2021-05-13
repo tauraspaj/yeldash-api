@@ -46,15 +46,20 @@ class UserController extends Controller
         $this->validate($request, [
             'fullName' => 'required|string',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->userId, 'userId')],
-            'phoneNumber' => ['required', 'min:7', Rule::unique('users')->ignore($user->userId, 'userId')],
-            'pwd' => 'required|min:6'
+            'phoneNumber' => ['regex:/^(\+)[0-9]+$/', 'min:7', Rule::unique('users')->ignore($user->userId, 'userId')],
+            'pwd' => 'min:6'
         ]);
 
-        // ! Find how to update sending type id
+        if ($request['phoneNumber'] == '') {
+            $request['phoneNumber'] = null;
+        }
+
         $user->fullName = $request['fullName'];
         $user->email = $request['email'];
         $user->phoneNumber = $request['phoneNumber'];
-        $user->pwd = app('hash')->make($request['pwd']);
+        if ($request['pwd'] != '') {
+            $user->pwd = app('hash')->make($request['pwd']);
+        }
 
         // Update user
         if ( $user->save() ) {

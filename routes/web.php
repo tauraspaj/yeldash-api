@@ -23,8 +23,9 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->post('user/logout', 'AuthController@logout');
     
     $router->get('users', 'UserController@index');
-    // $router->get('user/myProfile', 'UserController@myProfile');
-    // $router->post('user/update', 'UserController@update');
+
+    $router->get('user/myProfile', 'UserController@myProfile');
+    $router->post('user/update', 'UserController@update');
     // $router->post('users', 'UserController@create');
     // $router->delete('users/{userId}', 'UserController@index');
 
