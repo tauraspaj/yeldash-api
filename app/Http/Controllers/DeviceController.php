@@ -115,11 +115,8 @@ class DeviceController extends Controller
                     ->where('smsAlarms.deviceId', $device->deviceId);
                     
         $second = DB::table('triggeredAlarmsHistory')
-                    ->select('channels.channelName AS channelName', 'alarmTriggers.operator AS msg1', 'alarmTriggers.thresholdValue AS msg2', 'units.unitName AS unit', 'triggeredAlarmsHistory.clearedAt AS timestampCol')
-                    ->leftJoin('alarmTriggers', 'triggeredAlarmsHistory.triggerId', '=', 'alarmTriggers.triggerId')
-                    ->leftJoin('channels', 'alarmTriggers.channelId', '=', 'channels.channelId')
-                    ->leftJoin('units', 'channels.unitId', '=', 'units.unitId')
-                    ->where('alarmTriggers.deviceId', $device->deviceId);
+                    ->select('triggeredAlarmsHistory.channelName AS channelName', 'triggeredAlarmsHistory.operator AS msg1', 'triggeredAlarmsHistory.thresholdValue AS msg2', 'triggeredAlarmsHistory.unitName AS unit', 'triggeredAlarmsHistory.clearedAt AS timestampCol')
+                    ->where('triggeredAlarmsHistory.deviceId', $device->deviceId);
                     
         $third = DB::table('smsStatus')
                     ->select(DB::raw('"Device" AS channelName'), 'smsStatus.smsStatus AS msg1', DB::raw('NULL AS msg22'), DB::raw('NULL AS unit'), 'smsStatus.smsStatusTime AS timestampCol')
