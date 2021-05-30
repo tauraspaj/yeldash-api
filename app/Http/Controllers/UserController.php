@@ -46,12 +46,15 @@ class UserController extends Controller
         $this->validate($request, [
             'fullName' => 'required|string',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->userId, 'userId')],
-            'phoneNumber' => ['regex:/^(\+)[0-9]+$/', 'min:7', Rule::unique('users')->ignore($user->userId, 'userId')],
             'pwd' => 'min:6'
         ]);
 
-        if ($request['phoneNumber'] == '') {
+        if ($request['phoneNumber'] == '' || $request['phoneNumber'] == 'null' || $request['phoneNumber'] == null) {
             $request['phoneNumber'] = null;
+        } else {
+            $this->validate($request, [
+                'phoneNumber' => ['regex:/^(\+)[0-9]+$/', 'min:7', Rule::unique('users')->ignore($user->userId, 'userId')]
+            ]);
         }
 
         $user->fullName = $request['fullName'];
